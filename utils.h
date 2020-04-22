@@ -1,19 +1,10 @@
 #include <string.h>
 #include <vector>
 #include <unordered_map>
+#include <fstream>
+#include <iostream>
 
 using namespace std;
-
-
-class Books
-{
-private:
-    unordered_map<int, Book> books;
-public:
-    Books(/* args */);
-    ~Books();
-    void insert_book(Book new_book);
-};
 
 
 class Book
@@ -32,15 +23,20 @@ public:
 };
 
 
-class Reviews
+class Books
 {
 private:
-    vector<Review> reviews;
+    string path;
+    unordered_map<int, Book> books;
+    char *buffer;
+    int buffer_length;
 public:
-    Reviews(/* args */);
-    ~Reviews();
-    void insert_review(Review new_review);
+    Books(string path);
+    ~Books();
+    void insert_book(Book new_book);
+    void read_csv();
 };
+
 
 class Review
 {
@@ -51,4 +47,20 @@ private:
 public:
     Review(vector<string> input);
 };
+
+
+class Reviews
+{
+private:
+    string path;
+    vector<Review> reviews;
+    char *buffer;
+    int buffer_length;
+public:
+    Reviews(string path);
+    ~Reviews();
+    void insert_review(Review new_review);
+    void read_csv();
+};
+
 
