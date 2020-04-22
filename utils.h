@@ -47,7 +47,7 @@ public:
     int book_id; // which is not an ID though
     int rating;
     int number_of_likes;
-    
+
     Review(vector<string> &input);
 };
 
