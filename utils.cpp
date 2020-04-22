@@ -8,11 +8,6 @@ Books::Books(string path, string genre)
     this->genre = genre;
 }
 
-void Books::insert_book(Book new_book)
-{
-    this->books.insert({new_book.get_book_id(), new_book});
-}
-
 void Books::read_csv()
 {
     ifstream file(path);
@@ -25,14 +20,11 @@ void Books::read_csv()
 
     file.read(buff,length);
 
-    if (file)
-      cout << file.gcount() <<" characters read successfully.\n";
-    else
+    if (!file)
       cout << "error: only " << file.gcount() << " could be read\n";
     file.close();
     this->buffer = buff;
     this->buffer_length = length;
-    // TODO: delete[] buff when parsed.
   } 
 }
 
@@ -66,8 +58,8 @@ void Books::parse_books()
                     line_vec.push_back(word);
                     if (line_vec[2] == this->genre || line_vec[3] == this->genre)
                     {
-                        Book new_book(line_vec);
-                        this->insert_book(new_book);
+                        Book *new_book = new Book(line_vec);
+                        this->books.insert({(*new_book).book_id, new_book});
                     }
                     word = "";
                     break;
@@ -80,7 +72,6 @@ void Books::parse_books()
         }
         line.push_back(this->buffer[i]);
     }
-    cout << "map size : " << this->books.size() << endl;
     delete[] this->buffer;
 }
 
@@ -95,11 +86,6 @@ Reviews::Reviews(string path)
     this->path = path;
 }
 
-void Reviews::insert_review(Review new_review)
-{
-    this->reviews.push_back(new_review);
-}
-
 void Reviews::read_csv()
 {
     ifstream file(path);
@@ -112,14 +98,11 @@ void Reviews::read_csv()
 
     file.read(buff,length);
 
-    if (file)
-      cout << file.gcount() <<" characters read successfully.\n";
-    else
+    if (!file)
       cout << "error: only " << file.gcount() << " could be read\n";
     file.close();
     this->buffer = buff;
     this->buffer_length = length;
-    // TODO: delete[] buff when parsed.
   }
 }
 
@@ -153,8 +136,8 @@ void Reviews::parse_reviews()
                     word.push_back(line[j]);
                     line_vec.push_back(word);
                     word = "";
-                    Review new_review(line_vec);
-                    this->insert_review(new_review);
+                    Review *new_review = new Review(line_vec);
+                    this->reviews.push_back(new_review);
                     break;
                 }
                 word.push_back(line[j]);
@@ -164,7 +147,6 @@ void Reviews::parse_reviews()
         }
         line.push_back(this->buffer[i]);
     }
-    cout << "map size : " << this->reviews.size() << endl;
     delete[] this->buffer;
 }
 
@@ -176,6 +158,9 @@ Reviews::~Reviews()
 // ------------------ Book --------------------
 Book::Book(vector<string> &input)
 {
+    this ->totol_book_reviews_likes = 0;
+    this ->score = 0;
+
     // dataset guarantees no execptions here
     this->book_id               = stoi(input[0]);
     this->book_title            =      input[1];
@@ -202,5 +187,37 @@ Review::Review(vector<string> &input)
 }
 
 
-
 // ------------------ others --------------------
+void print_result(unordered_map<int, Book*> &books, vector<Review*> &reviews)
+{
+    for (int i = 0; i < reviews.size(); i++)
+    {
+        unordered_map<int, Book*>::const_iterator it = books.find((*reviews[i]).book_id);
+        if (it == books.end())
+            continue;
+        (*it->second).totol_book_reviews_likes += (*reviews[i]).number_of_likes;
+        (*it->second).score += ((*reviews[i]).rating * (*reviews[i]).number_of_likes);
+    }
+    Book *most_pop_book;
+    float max = 0;
+    for (auto& it:books)
+    {
+        if ((*it.second).totol_book_reviews_likes == 0)
+            (*it.second).score = 0;
+        else
+            (*it.second).score /= (*it.second).totol_book_reviews_likes;
+        (*it.second).score += (*it.second).author_average_rating;
+        (*it.second).score *= 0.1;
+        if ((*it.second).score > max)
+        {
+            max = (*it.second).score;
+            most_pop_book = it.second;
+        }
+    }
+    cout << "id: " << (*most_pop_book).book_id << endl;
+    cout << "Title: " << (*most_pop_book).book_title << endl;
+    cout << "Genres: " << (*most_pop_book).genre_1 << ", " << (*most_pop_book).genre_2 << endl;
+    cout << "Number of Pages: " << (*most_pop_book).pages << endl;
+    cout << "author: " << (*most_pop_book).author_name << endl;
+    printf("Average Rating: %.2f\n", max);
+}

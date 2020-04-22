@@ -9,7 +9,7 @@ using namespace std;
 
 class Book
 {
-private:
+public:
     int     book_id;
     string  book_title;
     string  genre_1;
@@ -17,7 +17,9 @@ private:
     int     pages;
     string  author_name;
     float   author_average_rating;
-public:
+    int     totol_book_reviews_likes;
+    float   score;
+
     Book(vector<string> &input);
     int get_book_id();
 };
@@ -25,16 +27,15 @@ public:
 
 class Books
 {
-private:
-    string                   path;
-    string                   genre;
-    unordered_map<int, Book> books;
-    char                     *buffer;
-    int                      buffer_length;
 public:
+    string                    path;
+    string                    genre;
+    char                      *buffer;
+    int                       buffer_length;
+    unordered_map<int, Book*> books;
+
     Books(string path, string genre);
     ~Books();
-    void insert_book(Book new_book);
     void read_csv();
     void parse_books();
 };
@@ -42,28 +43,27 @@ public:
 
 class Review
 {
-private:
+public:
     int book_id; // which is not an ID though
     int rating;
     int number_of_likes;
-public:
+    
     Review(vector<string> &input);
 };
 
 
 class Reviews
 {
-private:
-    string         path;
-    vector<Review> reviews;
-    char           *buffer;
-    int            buffer_length;
 public:
+    string          path;
+    char            *buffer;
+    int             buffer_length;
+    vector<Review*> reviews;
+
     Reviews(string path);
     ~Reviews();
-    void insert_review(Review new_review);
     void read_csv();
     void parse_reviews();
 };
 
-
+void print_result(unordered_map<int, Book*> &books, vector<Review*> &reviews);

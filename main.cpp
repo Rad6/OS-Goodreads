@@ -11,5 +11,6 @@ int main(int argc, const char* argv[]) {
     r.read_csv();
     b.parse_books();
     r.parse_reviews();
+    print_result(b.books, r.reviews);
     return 0;
 }
