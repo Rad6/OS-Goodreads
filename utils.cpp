@@ -1,10 +1,6 @@
 #include "utils.h"
 
 
-
-
-
-
 // ------------------ Book --------------------
 Book::Book(vector<string> &input)
 {
@@ -33,9 +29,8 @@ Review::Review(vector<string> &input)
 
 
 // ----------------------- others -----------------------
-vector<long> specify_boundaries(bool is_book)
+void specify_boundaries(long *arr, bool is_book)
 {
-    vector<long> result;
     int points = is_book ? BOOKS_THREADS_NUM - 1 : REVIEWS_THREADS_NUM - 1;
     string path = is_book ? BOOKS_PATH : REVIEWS_PATH;
 
@@ -55,7 +50,7 @@ vector<long> specify_boundaries(bool is_book)
             curr_char = fgetc(file);
             if (curr_char == '\n')
             {
-                result.push_back(pos);
+                *(arr + i) = pos;
                 break;
             }
             else
@@ -63,7 +58,6 @@ vector<long> specify_boundaries(bool is_book)
         }
     }
     fseek(file, 0, SEEK_END);
-    result.push_back(ftell(file));
+    *(arr + points) = ftell(file);
     fclose(file);
-    return result;
 }

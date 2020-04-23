@@ -4,8 +4,6 @@
 pthread_t book_threads  [BOOKS_THREADS_NUM];
 pthread_t review_threads[REVIEWS_THREADS_NUM];
 
-pthread_mutex_t _mutex;
-
 Books   books   [BOOKS_THREADS_NUM];
 Reviews reviews [REVIEWS_THREADS_NUM];
 
@@ -24,21 +22,19 @@ void* read_and_parse_books(void *arg)
         length = book_bounds[0];
     else
         length = book_bounds[thread_id] - book_bounds[thread_id - 1] - 1;
-    // printf("thread %ld: len: %ld\n", thread_id, length);
     char *buff = new char[length];
     
     if (thread_id == 0)
         start = 0;
     else
         start = book_bounds[thread_id - 1] + 1;
-    // printf("thread %ld: start: %ld\n", thread_id, start);
     ifstream file(BOOKS_PATH);
     if (file) {
         file.seekg(start, file.beg);
         file.read(buff, length);
         file.close();
     }
-    // printf("thread %ld: %c %c \n", thread_id, buff[0], buff[1]);
+
     // ----------------------- parsing part -----------------------
     string line = "";
     string word = "";
@@ -83,7 +79,6 @@ void* read_and_parse_books(void *arg)
         line.push_back(buff[i]);
     }
     delete[] buff;
-    // printf("thread %ld vector size: %lu\n", thread_id, books[thread_id].books.size());
 }
 
 void* read_and_parse_reviews(void *arg)
@@ -96,21 +91,18 @@ void* read_and_parse_reviews(void *arg)
         length = review_bounds[0];
     else
         length = review_bounds[thread_id] - review_bounds[thread_id - 1] - 1;
-    // printf("thread %ld: len: %ld\n", thread_id, length);
     char *buff = new char[length];
     
     if (thread_id == 0)
         start = 0;
     else
         start = review_bounds[thread_id - 1] + 1;
-    // printf("thread %ld: start: %ld\n", thread_id, start);
     ifstream file(REVIEWS_PATH);
     if (file) {
         file.seekg(start, file.beg);
         file.read(buff, length);
         file.close();
     }
-    // printf("thread %ld: %c %c \n", thread_id, buff[0], buff[1]);
 
     // ----------------------- parsing part -----------------------
     string line = "";
@@ -152,17 +144,13 @@ void* read_and_parse_reviews(void *arg)
         }
         line.push_back(buff[i]);
     }
-    delete[] buff;
-    // printf("thread %ld vector size: %lu\n", thread_id, reviews[thread_id].reviews.size());
-    
+    delete[] buff;    
 }
 
 void print_result()
 {
     for (int j = 0; j < REVIEWS_THREADS_NUM; j++)
-    {
         for (int i = 0; i < reviews[j].reviews.size(); i++)
-        {
             for (int k = 0; k < BOOKS_THREADS_NUM; k++)
             {
                 unordered_map<int, Book*>::const_iterator it = books[k].books.find((*reviews[j].reviews[i]).book_id);
@@ -171,12 +159,11 @@ void print_result()
                 (*it->second).totol_book_reviews_likes += (*reviews[j].reviews[i]).number_of_likes;
                 (*it->second).score += ((*reviews[j].reviews[i]).rating * (*reviews[j].reviews[i]).number_of_likes);
             }
-        }
-    }
+    
     Book *most_pop_book;
     float max = 0;
+
     for (int i = 0; i < BOOKS_THREADS_NUM; i++)
-    {
         for (auto& it:books[i].books)
         {
             if ((*it.second).totol_book_reviews_likes == 0)
@@ -190,8 +177,7 @@ void print_result()
                 max = (*it.second).score;
                 most_pop_book = it.second;
             }
-        }    
-    }
+        }
     
     cout << "id: " << (*most_pop_book).book_id << endl;
     cout << "Title: " << (*most_pop_book).book_title << endl;
@@ -201,34 +187,28 @@ void print_result()
     printf("Average Rating: %.2f\n", max);
 }
 
+
 int main(int argc, const char* argv[]) {
 
+    void *status1, *status2;
     genre = argv[1];
     
-    vector <long> book_bounds_vec   = specify_boundaries(true);
-    vector <long> review_bounds_vec = specify_boundaries(false);
-
-    for (int i = 0; i < BOOKS_THREADS_NUM; i++)
-        book_bounds[i] = book_bounds_vec[i];
-
-    for (int i = 0; i < REVIEWS_THREADS_NUM; i++)
-        review_bounds[i] = review_bounds_vec[i];
-
-    pthread_mutex_init(&_mutex, NULL);
-
+    specify_boundaries(book_bounds, true);
+    specify_boundaries(review_bounds, false);
+    
     for (long i = 0; i < BOOKS_THREADS_NUM; i++)
         pthread_create(&book_threads[i], NULL, read_and_parse_books, (void*)i);
 
-    void *status1;
 	for(long i = 0; i < BOOKS_THREADS_NUM; i++)
 		pthread_join(book_threads[i], &status1);
 
     for (long i = 0; i < REVIEWS_THREADS_NUM; i++)
         pthread_create(&review_threads[i], NULL, read_and_parse_reviews, (void*)i);
 
-    void *status2;
     for(long i = 0; i < REVIEWS_THREADS_NUM; i++)
 		pthread_join(review_threads[i], &status2);
+
     print_result();
+
     return 0;
 }
