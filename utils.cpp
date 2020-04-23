@@ -5,17 +5,31 @@
 
 
 
+// ------------------ Book --------------------
+Book::Book(vector<string> &input)
+{
+    this ->totol_book_reviews_likes = 0;
+    this ->score = 0;
+
+    // dataset guarantees no execptions here
+    this->book_id               = stoi(input[0]);
+    this->book_title            =      input[1];
+    this->genre_1               =      input[2];
+    this->genre_2               =      input[3];
+    this->pages                 = stoi(input[4]);
+    this->author_name           =      input[5];
+    this->author_average_rating = stof(input[6]);
+}
 
 
-
-
-
-
-
-
-
-
-
+// ------------------ Review --------------------
+Review::Review(vector<string> &input)
+{
+    // dataset guarantees no execptions here
+    this->book_id         = stoi(input[0]);
+    this->rating          = stoi(input[1]);
+    this->number_of_likes = stoi(input[2]);
+}
 
 
 // ----------------------- others -----------------------

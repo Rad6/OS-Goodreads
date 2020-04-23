@@ -15,5 +15,48 @@
 using namespace std;
 
 
+class Book
+{
+public:
+    int     book_id;
+    string  book_title;
+    string  genre_1;
+    string  genre_2;
+    int     pages;
+    string  author_name;
+    float   author_average_rating;
+    int     totol_book_reviews_likes;
+    float   score;
+
+    Book(vector<string> &input);
+};
+
+class Books
+{
+public:
+    string                    genre;
+    char                      *buffer;
+    int                       buffer_length;
+    unordered_map<int, Book*> books;
+};
+
+class Review
+{
+public:
+    int book_id; // which is not an ID though
+    int rating;
+    int number_of_likes;
+
+    Review(vector<string> &input);
+};
+
+class Reviews
+{
+public:
+    char            *buffer;
+    int             buffer_length;
+    vector<Review*> reviews;
+};
+
 
 vector<int> specify_boundaries(bool is_book);
