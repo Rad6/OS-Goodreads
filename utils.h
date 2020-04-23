@@ -59,4 +59,4 @@ public:
 };
 
 
-vector<int> specify_boundaries(bool is_book);
+vector<long> specify_boundaries(bool is_book);

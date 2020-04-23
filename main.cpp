@@ -4,26 +4,92 @@
 pthread_t book_threads  [BOOKS_THREADS_NUM];
 pthread_t review_threads[REVIEWS_THREADS_NUM];
 
-pthread_mutex_t mutex_sum;
+pthread_mutex_t _mutex;
 
 Books   books   [BOOKS_THREADS_NUM];
 Reviews reviews [REVIEWS_THREADS_NUM];
 
-int book_bounds[BOOKS_THREADS_NUM - 1] = {0};
-int review_bounds[REVIEWS_THREADS_NUM - 1] = {0};
+long book_bounds[BOOKS_THREADS_NUM] = {0};
+long review_bounds[REVIEWS_THREADS_NUM] = {0};
 
+void* read_and_parse_books(void *arg)
+{
+    long thread_id = (long) arg;
+    long length, start;
+    
+    if (thread_id == 0)
+        length = book_bounds[0];
+    else
+        length = book_bounds[thread_id] - book_bounds[thread_id - 1] - 1;
+    // printf("thread %ld: len: %ld\n", thread_id, length);
+    char *buff = new char[length];
+    
+    if (thread_id == 0)
+        start = 0;
+    else
+        start = book_bounds[thread_id - 1] + 1;
+    // printf("thread %ld: start: %ld\n", thread_id, start);
+    ifstream file(BOOKS_PATH);
+    if (file) {
+        file.seekg(start, file.beg);
+        file.read(buff, length);
+        file.close();
+    }
+    // printf("thread %ld: %c %c \n", thread_id, buff[0], buff[1]);
+}
+
+void* read_and_parse_reviews(void *arg)
+{
+    long thread_id = (long) arg;
+    long length, start;
+    
+    if (thread_id == 0)
+        length = review_bounds[0];
+    else
+        length = review_bounds[thread_id] - review_bounds[thread_id - 1] - 1;
+    // printf("thread %ld: len: %ld\n", thread_id, length);
+    char *buff = new char[length];
+    
+    if (thread_id == 0)
+        start = 0;
+    else
+        start = review_bounds[thread_id - 1] + 1;
+    // printf("thread %ld: start: %ld\n", thread_id, start);
+    ifstream file(REVIEWS_PATH);
+    if (file) {
+        file.seekg(start, file.beg);
+        file.read(buff, length);
+        file.close();
+    }
+    // printf("thread %ld: %c %c \n", thread_id, buff[0], buff[1]);
+}
 
 int main(int argc, const char* argv[]) {
     
-    vector <int> book_bounds_vec   = specify_boundaries(true);
-    vector <int> review_bounds_vec = specify_boundaries(false);
+    vector <long> book_bounds_vec   = specify_boundaries(true);
+    vector <long> review_bounds_vec = specify_boundaries(false);
 
-    for (int i = 0; i < BOOKS_THREADS_NUM - 1; i++)
+    for (int i = 0; i < BOOKS_THREADS_NUM; i++)
         book_bounds[i] = book_bounds_vec[i];
 
-    for (int i = 0; i < REVIEWS_THREADS_NUM - 1; i++)
+    for (int i = 0; i < REVIEWS_THREADS_NUM; i++)
         review_bounds[i] = review_bounds_vec[i];
 
+    pthread_mutex_init(&_mutex, NULL);
+
+    for (long i = 0; i < BOOKS_THREADS_NUM; i++)
+        pthread_create(&book_threads[i], NULL, read_and_parse_books, (void*)i);
+
+    void *status1;
+	for(long i = 0; i < BOOKS_THREADS_NUM; i++)
+		pthread_join(book_threads[i], &status1);
+
+    for (long i = 0; i < REVIEWS_THREADS_NUM; i++)
+        pthread_create(&review_threads[i], NULL, read_and_parse_reviews, (void*)i);
+
+    void *status2;
+    for(long i = 0; i < REVIEWS_THREADS_NUM; i++)
+		pthread_join(review_threads[i], &status2);
     
     return 0;
 }

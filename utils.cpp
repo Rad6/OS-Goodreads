@@ -33,9 +33,9 @@ Review::Review(vector<string> &input)
 
 
 // ----------------------- others -----------------------
-vector<int> specify_boundaries(bool is_book)
+vector<long> specify_boundaries(bool is_book)
 {
-    vector<int> result;
+    vector<long> result;
     int points = is_book ? BOOKS_THREADS_NUM - 1 : REVIEWS_THREADS_NUM - 1;
     string path = is_book ? BOOKS_PATH : REVIEWS_PATH;
 
@@ -48,7 +48,7 @@ vector<int> specify_boundaries(bool is_book)
     for (int i = 0; i < points; i++)
     {
         int curr_char;
-        int pos = (i + 1) * floor(length / (points + 1));
+        long pos = (i + 1) * floor(length / (points + 1));
         while (true)
         {
             fseek(file, pos, SEEK_SET);
@@ -62,6 +62,8 @@ vector<int> specify_boundaries(bool is_book)
                 ++pos;
         }
     }
+    fseek(file, 0, SEEK_END);
+    result.push_back(ftell(file));
     fclose(file);
     return result;
 }
