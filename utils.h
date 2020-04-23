@@ -6,8 +6,8 @@
 #include <cmath>
 #include <pthread.h>
 
-#define BOOKS_THREADS_NUM   4
-#define REVIEWS_THREADS_NUM 6
+#define BOOKS_THREADS_NUM   2
+#define REVIEWS_THREADS_NUM 4
 
 #define BOOKS_PATH   "datasets/books.csv"
 #define REVIEWS_PATH "datasets/reviews.csv"
