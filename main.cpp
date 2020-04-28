@@ -4,12 +4,15 @@
 pthread_t book_threads  [BOOKS_THREADS_NUM];
 pthread_t review_threads[REVIEWS_THREADS_NUM];
 
+pthread_mutex_t t_mutex;
+
 Books   books   [BOOKS_THREADS_NUM];
 Reviews reviews [REVIEWS_THREADS_NUM];
 
 long book_bounds[BOOKS_THREADS_NUM] = {0};
 long review_bounds[REVIEWS_THREADS_NUM] = {0};
 
+unordered_map<int, Book*> all_books;
 string genre;
 
 void* read_and_parse_books(void *arg)
@@ -65,7 +68,9 @@ void* read_and_parse_books(void *arg)
                     if (line_vec[2] == genre || line_vec[3] == genre)
                     {
                         Book *new_book = new Book(line_vec);
-                        books[thread_id].books.insert({(*new_book).book_id, new_book});
+                        pthread_mutex_lock(&t_mutex);
+                        all_books.insert({(*new_book).book_id, new_book});
+                        pthread_mutex_unlock(&t_mutex);
                     }
                     word = "";
                     break;
@@ -144,27 +149,26 @@ void* read_and_parse_reviews(void *arg)
         }
         line.push_back(buff[i]);
     }
-    delete[] buff;    
+    delete[] buff;
 }
 
 void print_result()
 {
+
     for (int j = 0; j < REVIEWS_THREADS_NUM; j++)
         for (int i = 0; i < reviews[j].reviews.size(); i++)
-            for (int k = 0; k < BOOKS_THREADS_NUM; k++)
-            {
-                unordered_map<int, Book*>::const_iterator it = books[k].books.find((*reviews[j].reviews[i]).book_id);
-                if (it == books[k].books.end())
-                    continue;
-                (*it->second).totol_book_reviews_likes += (*reviews[j].reviews[i]).number_of_likes;
-                (*it->second).score += ((*reviews[j].reviews[i]).rating * (*reviews[j].reviews[i]).number_of_likes);
-            }
-    
+        {
+            unordered_map<int, Book*>::const_iterator it = all_books.find((*reviews[j].reviews[i]).book_id);
+            if (it == all_books.end())
+                continue;
+            (*it->second).totol_book_reviews_likes += (*reviews[j].reviews[i]).number_of_likes;
+            (*it->second).score += ((*reviews[j].reviews[i]).rating * (*reviews[j].reviews[i]).number_of_likes);
+        }
+
     Book *most_pop_book;
     float max = 0;
 
-    for (int i = 0; i < BOOKS_THREADS_NUM; i++)
-        for (auto& it:books[i].books)
+        for (auto& it:all_books)
         {
             if ((*it.second).totol_book_reviews_likes == 0)
                 (*it.second).score = 0;
@@ -195,6 +199,8 @@ int main(int argc, const char* argv[]) {
     
     specify_boundaries(book_bounds, true);
     specify_boundaries(review_bounds, false);
+
+    pthread_mutex_init(&t_mutex, NULL);
     
     for (long i = 0; i < BOOKS_THREADS_NUM; i++)
         pthread_create(&book_threads[i], NULL, read_and_parse_books, (void*)i);
@@ -208,6 +214,7 @@ int main(int argc, const char* argv[]) {
     for(long i = 0; i < REVIEWS_THREADS_NUM; i++)
 		pthread_join(review_threads[i], &status2);
 
+    pthread_mutex_destroy(&t_mutex);
     print_result();
 
     return 0;
